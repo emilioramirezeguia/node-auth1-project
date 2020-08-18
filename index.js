@@ -1,10 +1,12 @@
 // Import npm packages
 const express = require("express");
 const session = require("express-session");
+const KnexSessionStore = require("connect-session-knex")(session);
 
 // Import routers && middleware
 const usersRouter = require("./users/usersRouter");
 const authRouter = require("./auth/authRouter");
+const dbConnection = require("./data/db-config");
 const protected = require("./auth/protectedMW");
 
 const server = express();
@@ -18,6 +20,13 @@ const sessionConfig = {
   },
   resave: false,
   saveUninitialized: false, // GDPR Compliance, the client should drive this
+  store: new KnexSessionStore({
+    knex: dbConnection,
+    tablename: "sessions",
+    sidfieldname: "sid",
+    createtable: true,
+    clearInterval: 1000 * 60 * 60, // delete expired sessions every hour
+  }),
 };
 
 // Use middleware
